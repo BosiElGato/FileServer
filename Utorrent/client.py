@@ -40,7 +40,7 @@ def computeHash(bytes):
     sha1.update(bytes)
     return sha1.hexdigest()
 
-def uploadFile(context, filename, servers):
+def uploadFile(context, filename, servers,username):
     sockets = []
 
     InfoServers = open("InfoServers.txt","w+")
@@ -90,7 +90,7 @@ def uploadFile(context, filename, servers):
 
         #InfoServers.write(str(servers[part%len(sockets)])+"\n")
         locationInfo =servers[part%len(sockets)]
-        proxy.send_multipart([bytes("UploadedFile",'ascii'),Hash1Info,locationInfo])
+        proxy.send_multipart([bytes("UploadedFile",'ascii'),username,Hash1Info,locationInfo])
         RespuestaProxy = proxy.recv()
         print(RespuestaProxy)
 
@@ -106,7 +106,7 @@ def main():
         exit()
 
 
-    username = sys.argv[1]
+    username = sys.argv[1].encode('ascii')
     operation = sys.argv[2]
     filename = sys.argv[3].encode('ascii')
 
@@ -115,14 +115,14 @@ def main():
     print("Operation: {}".format(operation))
 
     if operation == "upload":
-        proxy.send_multipart([bytes("AvailableServersForUpload", 'ascii')])
+        proxy.send_multipart([bytes("AvailableServersForUpload", 'ascii'),username])
         servers = proxy.recv_multipart()        
         print("There are {} available servers".format(len(servers)))        
-        uploadFile(context, filename, servers)        
+        uploadFile(context, filename, servers,username)        
         print("File {} was uploaded.".format(filename))
 
     elif operation == "download":
-        proxy.send_multipart([bytes("Download", 'ascii'), filename])
+        proxy.send_multipart([bytes("Download", 'ascii'),username, filename])
         #servers = proxy.recv_multipart()
         #print(filename.decode('ascii'))
         server = proxy.recv()
@@ -160,7 +160,10 @@ def main():
                 print("downloaded  as {}".format("copy-"+myList[0]))
 
     elif operation == "share":
-        print("Not implemented yet")
+        print("Operación compartir, espere un momento...")
+        proxy.send_multipart([b"Share", username, filename])
+        asw=proxy.recv()
+        print(asw.decode('ascii'))
     else:
         print("Operation not found!!!")
 

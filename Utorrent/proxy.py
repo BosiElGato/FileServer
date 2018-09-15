@@ -18,13 +18,16 @@ def main():
     while True:
         socks = dict(poller.poll())
         if clients in socks:
-            print("Message from client")
-            operation, *msg = clients.recv_multipart()
+            
+            operation,username, *msg = clients.recv_multipart()
+            print("Message from "+username.decode('ascii'))
 
             if operation.decode('ascii') == "AvailableServersForUpload":
+                print("Sending Server List.")
                 clients.send_multipart(servAddresses)
 
             elif operation.decode('ascii') == "Download":
+                print(username.decode('ascii')+" try download a file")
                 #print("Operation doesn't supported")
                 #clients.send_multipart(servAddresses)
                 f = open("InfoFiles.txt","r") #opens file with name of "test.txt"
@@ -33,6 +36,10 @@ def main():
                 for line in f:
                     myList.append(line)
                 pos = 0
+                #Aqui se guarda la direccion del servidor donde se encuentra el archivo
+                #En caso de que no exista el archivo se envia un mensaje al cliente 
+                #Diciendo que el archivo no existe
+
                 addrforclient = "Archivo No existe"
                 for pos1 in myList:
                     if pos1 == msg[0].decode('ascii')+"\n":
@@ -42,7 +49,13 @@ def main():
                 clients.send(bytes(addrforclient,'ascii'))              
 
             elif operation.decode('ascii') == "Share":
-                print("No implemented yet")
+                print("Sharing file")
+                shared = open("shared.txt","a")
+                shared.write(msg[0].decode('ascii')+"\n")
+                shared.write(username.decode('ascii')+"\n")
+                clients.send(b"File is shared now")
+                shared.close()
+
 
             elif operation.decode('ascii') == "UploadedFile":
                 InfoFiles = open("InfoFiles.txt","a")
@@ -65,8 +78,8 @@ def main():
 
 
 if __name__ == '__main__':
-    print("\tBosiElGato")
-    print("\tActivated Proxy")
+    print("\t  BosiElGato")
+    print("\t Activated Proxy")
     print("\tAll Rigths Reserved")
-    print("\tEnjoy Utorrent")
+    print("\t  Enjoy Utorrent")
     main()
